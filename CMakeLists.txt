@@ -3,4 +3,9 @@ project(codepiler C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(codepiler main.c)
+file(GLOB_RECURSE CODEPILER_SOURCES
+        "codepiler/*.c"
+        "codepiler/*.h"
+        )
+
+add_executable(codepiler ${CODEPILER_SOURCES})
