@@ -5,7 +5,7 @@
 #include "code_info.h"
 
 typedef struct {
-    char *message;
+    const char *message;
     CodeInfo info;
     int file;
 } Error;

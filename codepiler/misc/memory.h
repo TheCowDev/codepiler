@@ -8,6 +8,10 @@ static void *code_alloc(size_t size) {
     return malloc(size);
 }
 
+static void *code_calloc(size_t size) {
+    return calloc(size, 1);
+}
+
 static void *code_realloc(void *memory, size_t new_size) {
     return realloc(memory, new_size);
 }

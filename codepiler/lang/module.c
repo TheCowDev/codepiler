@@ -5,6 +5,7 @@
 void module_parse(Module *module) {
 
     Parser parser = {0};
+    parser.code = module->raw_code;
     OptError error = {0};
     *module = parse_module(&parser, &error);
 
@@ -15,5 +16,5 @@ void module_parse(Module *module) {
 }
 
 void module_print(Module module) {
-    func_print(*module.functions);
+    func_print(module.functions);
 }

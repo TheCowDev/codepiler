@@ -16,7 +16,7 @@ typedef struct {
 } OptFloat;
 
 static void lex_skip_whitespaces(Parser *parser) {
-    while (parser->code == ' ') {
+    while (*parser->code == ' ') {
         ++parser->code;
     }
 }
@@ -79,6 +79,7 @@ static OptInt lex_int(Parser *parser) {
     }
 
     opt.present = false;
+    parser->code = begin;
     return opt;
 }
 
@@ -96,7 +97,7 @@ static OptFloat lex_float(Parser *parser) {
         ++parser->code;
     }
 
-    if (parser->code != begin) {
+    if (parser->code != begin && found_dot) {
         int id_size = parser->code - begin;
         char lexed_float[id_size + 1];
         memcpy(lexed_float, begin, id_size);
@@ -106,6 +107,7 @@ static OptFloat lex_float(Parser *parser) {
         return opt;
     }
 
+    parser->code = begin;
     opt.present = false;
     return opt;
 }
@@ -115,59 +117,96 @@ static char *lex_str(Parser *parser) {
 }
 
 static bool peek_to_next_level_of_tab(Parser *parser, int *tab_level) {
-    if (parser->code == '\n') {
-        while (*(parser->code + *tab_level) == '\t') {
-            ++(*tab_level);
+    if (*parser->code == '\n') {
+        int index = 1; // 1 to skip the jump line
+        while (true) {
+            if (*(parser->code + index) == '\t') {
+                ++(*tab_level);
+                ++index;
+            } else if (strncmp(parser->code + index, "    ", 4) == 0) {
+                ++(*tab_level);
+                index += 4;
+            } else {
+                break;
+            }
         }
         return true;
     }
-
     return false;
 }
 
 static void go_to_next_level_of_tab(Parser *parser) {
-    if (parser->code == '\n') {
-        while (*parser->code == '\t') {
-            ++parser->code;
+    if (*parser->code == '\n') {
+        int index = 1; // 1 to skip the jump line
+        while (true) {
+            if (*(parser->code + index) == '\t') {
+                ++index;
+            } else if (strncmp(parser->code + index, "    ", 4) == 0) {
+                index += 4;
+            } else {
+                break;
+            }
         }
+        parser->code += index;
     }
 }
 
 static IR parse_expression(Parser *parser, Func *func, OptError *error) {
+    _IR expression = {0};
     OptFloat opt_float = lex_float(parser);
     if (opt_float.present) {
 
     } else {
-        printf("No expression recognized");
+        OptInt opt_int = lex_int(parser);
+        if (opt_int.present) {
+            expression.instr = INSTR_CONST_I64;
+            expression.return_type = type_int64();
+            expression.int_const = opt_int.value;
+        } else {
+            printf("Expression not recognized");
+        }
     }
+
+    func_add_instruction(func, expression);
 }
 
 static void parse_function_body(Parser *parser, Func *func, OptError *error) {
     if (lex_specific(parser, "return")) {
         _IR return_ir;
         return_ir.instr = INSTR_RETURN;
-        return_ir.return_instr.expresssion = parse_expression(parser, func, error);
+        return_ir.return_instr.expression = parse_expression(parser, func, error);
         func_add_instruction(func, return_ir);
     }
 }
 
-static Func parse_func(Parser *parser, OptError *error) {
+static Func *parse_func(Parser *parser, OptError *error) {
     if (lex_specific(parser, "fn")) {
         const char *func_name = lex_id(parser);
-        if (func_name == NULL) {
+        if (func_name != NULL) {
             if (lex_specific(parser, "(") && lex_specific(parser, ")") && lex_specific(parser, ":")) {
-                parse_function_body(parser, function, error);
+                int func_body_level = 0;
+                peek_to_next_level_of_tab(parser, &func_body_level);
+                if (func_body_level > 0) {
+                    go_to_next_level_of_tab(parser);
+                    Func *func = code_calloc(sizeof(Func));
+                    func->name = func_name;
+                    parse_function_body(parser, func, error);
+                    return func;
+                } else {
+                    *error = error_opt_from_char("Function content expected after ':'", parser->info);
+                }
             }
         } else {
             *error = error_opt_from_char("Function name expected after 'fn'", parser->info);
         }
     }
+
+    return NULL;
 }
 
 Module parse_module(Parser *parser, OptError *error) {
     Module module;
-    Func *func = code_alloc(sizeof(Func));
-    *func = parse_func(parser, error);
+    Func *func = parse_func(parser, error);
     module.functions = func;
     return module;
 }

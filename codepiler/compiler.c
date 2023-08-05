@@ -40,4 +40,5 @@ bool compiler_add_file(Compiler *compiler, const char *filename) {
 
 void compiler_compile(Compiler *compiler) {
     module_parse(&compiler->module);
+    module_print(compiler->module);
 }

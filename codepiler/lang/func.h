@@ -7,7 +7,7 @@
 #include "../misc/flat_array.h"
 
 typedef struct {
-    char *name;
+    const char *name;
     Type return_type;
     Type *args;
     FlatArray instructions;
@@ -16,6 +16,6 @@ typedef struct {
 
 IR func_add_instruction(Func *func, _IR ir);
 
-void func_print(Func func);
+void func_print(Func *func);
 
 #endif //CODEPILER_FUNC_H
