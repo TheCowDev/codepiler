@@ -151,7 +151,7 @@ static void go_to_next_level_of_tab(Parser *parser) {
     }
 }
 
-static IR parse_expression(Parser *parser, Func *func, OptError *error) {
+static IR parse_expr(Parser *parser, Func *func, OptError *error) {
     _IR expression = {0};
     OptFloat opt_float = lex_float(parser);
     if (opt_float.present) {
@@ -167,7 +167,71 @@ static IR parse_expression(Parser *parser, Func *func, OptError *error) {
         }
     }
 
-    func_add_instruction(func, expression);
+    return func_add_instruction(func, expression);
+}
+
+// Forward declarations.
+static IR parse_factor(Parser *parser, Func *func, OptError *error);
+static IR parse_term(Parser *parser, Func *func, OptError *error);
+
+// Parses expressions with the lowest precedence.
+static IR parse_expression(Parser *parser, Func *func, OptError *error) {
+    IR ir = parse_term(parser, func, error);
+    while (true) {
+        if (lex_specific(parser, "+")) {
+            IR right = parse_term(parser, func, error);
+            // Create an addition instruction.
+            _IR addition = {0};
+            addition.instr = INSTR_OP_ADD;
+            addition.op.left_operand = ir;
+            addition.op.right_operand = right;
+            addition.return_type = type_int64();
+            ir = func_add_instruction(func, addition);
+        } else {
+            break;
+        }
+    }
+    return ir;
+}
+
+// Parses expressions with higher precedence than parse_expression.
+static IR parse_term(Parser *parser, Func *func, OptError *error) {
+    IR ir = parse_factor(parser, func, error);
+    while (true) {
+        if (lex_specific(parser, "*")) {
+            IR right = parse_factor(parser, func, error);
+            // Create a multiplication instruction.
+            _IR multiplication = {0};
+            multiplication.instr = INSTR_OP_MUL;
+            multiplication.op.left_operand = ir;
+            multiplication.op.right_operand = right;
+            ir = func_add_instruction(func, multiplication);
+        } else if (lex_specific(parser, "/")) {
+            IR right = parse_factor(parser, func, error);
+            // Create a division instruction.
+            _IR division = {0};
+            division.instr = INSTR_OP_MUL;
+            division.op.left_operand = ir;
+            division.op.right_operand = right;
+            ir = func_add_instruction(func, division);
+        } else {
+            break;
+        }
+    }
+    return ir;
+}
+
+static IR parse_factor(Parser *parser, Func *func, OptError *error) {
+    if (lex_specific(parser, "(")) {
+        IR ir = parse_expression(parser, func, error);
+        if (!lex_specific(parser, ")")) {
+            // Parentheses not matched, report an error.
+            *error = error_opt_from_char("Mismatched parentheses", parser->info);
+        }
+        return ir;
+    } else {
+        return parse_expr(parser, func, error);
+    }
 }
 
 static void parse_function_body(Parser *parser, Func *func, OptError *error) {

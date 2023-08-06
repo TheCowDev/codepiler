@@ -18,9 +18,26 @@ void func_print(Func *func) {
                 printf("const i64 %d", ir->int_const);
                 break;
 
+            case INSTR_OP_ADD:
+                printf("add %d %d", ir->op.left_operand, ir->op.right_operand);
+                break;
+
+            case INSTR_OP_SUB:
+                printf("sub %d %d", ir->op.left_operand, ir->op.right_operand);
+                break;
+
+            case INSTR_OP_MUL:
+                printf("mul %d %d", ir->op.left_operand, ir->op.right_operand);
+                break;
+
+            case INSTR_OP_DIV:
+                printf("div %d %d", ir->op.left_operand, ir->op.right_operand);
+                break;
+
             case INSTR_RETURN:
                 printf("return %d", ir->return_instr.expression);
                 break;
+
         }
 
         printf("\n");

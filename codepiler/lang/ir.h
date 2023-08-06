@@ -43,6 +43,8 @@ typedef enum {
 
 typedef int IR;
 
+static const IR INVALID_IR = -1;
+
 typedef struct {
     Instr instr;
 
