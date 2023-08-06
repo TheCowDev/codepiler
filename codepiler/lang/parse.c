@@ -172,6 +172,7 @@ static IR parse_expr(Parser *parser, Func *func, OptError *error) {
 
 // Forward declarations.
 static IR parse_factor(Parser *parser, Func *func, OptError *error);
+
 static IR parse_term(Parser *parser, Func *func, OptError *error);
 
 // Parses expressions with the lowest precedence.
@@ -183,6 +184,15 @@ static IR parse_expression(Parser *parser, Func *func, OptError *error) {
             // Create an addition instruction.
             _IR addition = {0};
             addition.instr = INSTR_OP_ADD;
+            addition.op.left_operand = ir;
+            addition.op.right_operand = right;
+            addition.return_type = type_int64();
+            ir = func_add_instruction(func, addition);
+        } else if (lex_specific(parser, "-")) {
+            IR right = parse_term(parser, func, error);
+            // Create an addition instruction.
+            _IR addition = {0};
+            addition.instr = INSTR_OP_SUB;
             addition.op.left_operand = ir;
             addition.op.right_operand = right;
             addition.return_type = type_int64();

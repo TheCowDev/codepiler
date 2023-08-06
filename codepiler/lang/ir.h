@@ -46,6 +46,7 @@ typedef int IR;
 static const IR INVALID_IR = -1;
 
 typedef struct {
+    IR index;
     Instr instr;
 
     union {

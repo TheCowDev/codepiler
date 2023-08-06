@@ -4,7 +4,18 @@
 IR func_add_instruction(Func *func, _IR ir) {
     _IR *new_ir = flat_array_add(&func->instructions, sizeof(_IR));
     *new_ir = ir;
-    return func->instructions.size - 1;
+    new_ir->index = func->instructions.size - 1;
+    return new_ir->index;
+}
+
+_IR *func_get_instruction(Func *func, int index) {
+    return flat_array_get(&func->instructions, index, sizeof(_IR));
+}
+
+void func_add_error(Func *func, const char *error, CodeInfo info) {
+    Error *new_error = flat_array_add(&func->errors, sizeof(Error));
+    new_error->message = error;
+    new_error->info = info;
 }
 
 void func_print(Func *func) {

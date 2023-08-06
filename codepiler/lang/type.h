@@ -1,6 +1,8 @@
 #ifndef CODEPILER_TYPE_H
 #define CODEPILER_TYPE_H
 
+#include <stdbool.h>
+
 typedef enum {
     DATA_TYPE_VOID = 0,
     DATA_TYPE_PRIMITIVE = 1,
@@ -25,22 +27,16 @@ typedef struct {
     int ptr_depth;
 } Type;
 
-static Type type_void() {
-    return (Type) {0};
-}
+Type type_void();
 
-static Type type_int64() {
-    Type type;
-    type.data_type = DATA_TYPE_PRIMITIVE;
-    type.primitive = PRIMITIVE_TYPE_I64;
-    return type;
-}
+Type type_int64();
 
-static Type type_f64() {
-    Type type;
-    type.data_type = DATA_TYPE_PRIMITIVE;
-    type.primitive = PRIMITIVE_TYPE_F64;
-    return type;
-}
+Type type_f64();
+
+bool type_is_int64(Type type);
+
+bool type_is_f64(Type type);
+
+bool type_eq(Type a, Type b);
 
 #endif //CODEPILER_TYPE_H
