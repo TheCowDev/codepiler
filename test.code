@@ -1,0 +1,2 @@
+fn my_func():
+    return 10 - 3
